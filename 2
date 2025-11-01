@@ -1,64 +1,81 @@
-if game.PlaceId == 6403373529 then
+-- Auto-execute при телепорте
 local teleportFunc = queueonteleport or queue_on_teleport or syn and syn.queue_on_teleport
 if teleportFunc then
     teleportFunc([[
-if not game:IsLoaded() then
-    game.Loaded:Wait()
+        if not game:IsLoaded() then
+            game.Loaded:Wait()
+        end
+        repeat task.wait() until game.Players.LocalPlayer
+        wait(1)
+        
+        -- Запускаем скрипт снова после телепорта
+        loadstring(game:HttpGet("ВАШ_PASTEBIN_ССЫЛКА_СЮДА"))()
+    ]])
 end
-repeat task.wait() until game.Players.LocalPlayer
-wait(0.25)
-loadstring(game:HttpGet("https://raw.githubusercontent.com/brainburn33/2/refs/heads/main/2"))()
-            ]])
-end
-local playerHead = game.Players.LocalPlayer.Character.Head
 
-print("🍬 Собираем конфеты...")
+-- Основной скрипт
+print("🍬 Начинаем сбор конфет...\n")
+
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local playerHead = character:WaitForChild("Head")
+
+local count = 0
 
 -- Собираем все конфеты
 for i, v in pairs(workspace.CandyCorns:GetDescendants()) do
     if v.Name == "TouchInterest" and v.Parent then
-        firetouchinterest(playerHead, v.Parent, 0)
-        firetouchinterest(playerHead, v.Parent, 1)
+        pcall(function()
+            firetouchinterest(playerHead, v.Parent, 0)
+            firetouchinterest(playerHead, v.Parent, 1)
+        end)
+        
+        count = count + 1
+        print(string.format("🍬 [%d] собрано", count))
+        
         wait(0.01)
     end
 end
 
-print("✅ Все конфеты собраны!")
-print("🔄 Server hop...")
+print(string.format("\n✅ Всего собрано: %d конфет", count))
+print("🔄 Server hop через 2 секунды...")
 wait(2)
 
---[[
-	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
-]]
+-- Server Hop
 local PlaceID = game.PlaceId
 local AllIDs = {}
 local foundAnything = ""
 local actualHour = os.date("!*t").hour
-local Deleted = false
+
 local File = pcall(function()
     AllIDs = game:GetService('HttpService'):JSONDecode(readfile("NotSameServers.json"))
 end)
+
 if not File then
     table.insert(AllIDs, actualHour)
     writefile("NotSameServers.json", game:GetService('HttpService'):JSONEncode(AllIDs))
 end
+
 function TPReturner()
-    local Site;
+    local Site
     if foundAnything == "" then
         Site = game.HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. PlaceID .. '/servers/Public?sortOrder=Asc&limit=100'))
     else
         Site = game.HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. PlaceID .. '/servers/Public?sortOrder=Asc&limit=100&cursor=' .. foundAnything))
     end
+    
     local ID = ""
     if Site.nextPageCursor and Site.nextPageCursor ~= "null" and Site.nextPageCursor ~= nil then
         foundAnything = Site.nextPageCursor
     end
-    local num = 0;
-    for i,v in pairs(Site.data) do
+    
+    local num = 0
+    for i, v in pairs(Site.data) do
         local Possible = true
         ID = tostring(v.id)
+        
         if tonumber(v.maxPlayers) > tonumber(v.playing) then
-            for _,Existing in pairs(AllIDs) do
+            for _, Existing in pairs(AllIDs) do
                 if num ~= 0 then
                     if ID == tostring(Existing) then
                         Possible = false
@@ -74,13 +91,15 @@ function TPReturner()
                 end
                 num = num + 1
             end
+            
             if Possible == true then
                 table.insert(AllIDs, ID)
                 wait()
                 pcall(function()
                     writefile("NotSameServers.json", game:GetService('HttpService'):JSONEncode(AllIDs))
                     wait()
-                    game:GetService("TeleportService"):TeleportToPlaceInstance(PlaceID, ID, game.Players.LocalPlayer)
+                    print("🔄 Телепортируемся на новый сервер...")
+                    game:GetService("TeleportService"):TeleportToPlaceInstance(PlaceID, ID, player)
                 end)
                 wait(4)
             end
@@ -99,5 +118,4 @@ function Teleport()
     end
 end
 
--- If you'd like to use a script before server hopping (Like a Automatic Chest collector you can put the Teleport() after it collected everything.
 Teleport()
