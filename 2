@@ -33,13 +33,13 @@ for i, v in pairs(workspace.CandyCorns:GetDescendants()) do
         count = count + 1
         print(string.format("🍬 [%d] собрано", count))
         
-        wait(0.01)
+        wait(0.0001)
     end
 end
 
 print(string.format("\n✅ Всего собрано: %d конфет", count))
 print("🔄 Server hop через 2 секунды...")
-wait(2)
+wait(4)
 
 -- Server Hop
 local PlaceID = game.PlaceId
